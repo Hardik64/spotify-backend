@@ -6,6 +6,24 @@ const bcrypt = require('bcryptjs');
 async function registerUser(req, res) {
     const { username, email, password, role = 'user' } = req.body;
 
+    // Validation
+    const errors = [];
+    if (!username || username.length < 6 || username.length > 20) {
+        errors.push('Username must be between 6 and 20 characters');
+    }
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+        errors.push('Please provide a valid email address');
+    }
+    if (!password || password.length < 6) {
+        errors.push('Password must be at least 6 characters long');
+    }
+    if (!['user', 'artist'].includes(role)) {
+        errors.push('Invalid role specified');
+    }
+
+    if (errors.length > 0) {
+        return res.status(400).json({ message: 'Validation failed', errors });
+    }
 
     const isUserAlreadyExists = await userModel.findOne({
         $or: [{ username }, { email }],
